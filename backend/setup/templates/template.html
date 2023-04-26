@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <title>ROBO Template V2</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+        <style>
+        h2{
+            font-size: 20px;
+        }
+        h3, h4{
+            margin-top: 0px;
+            margin-bottom: 0px;
+        }
+        .reduced_img_height{
+            height: 180px
+        }
+        #options{
+            position:fixed;
+            bottom: 80mm;
+            z-index: 1;
+        }
+        .button {
+            background-color: rgb(0,64,152);
+            border: none;
+            color: white;
+            padding: 16px 32px;
+            text-align: center;
+            font-size: 16px;
+            margin: 4px 2px;
+            opacity: 1;
+            transition: 0.3s;
+            display: inline-block;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        #coverPage {
+            margin: auto;
+            width: 40%;
+            padding: 10px;
+        }
+        @media print {
+            .pagebreak { page-break-before: always; } /* page-break-after works, as well */
+        }
+        .page2 > div{
+            margin-top:20px;
+            margin-bottom:20px;
+        }
+        .grid-container_partc {
+            display: grid;
+            grid-template-columns: auto auto auto auto;
+        }
+        .grid-item_partc {
+            padding-left: 7px;
+            padding-right: 7px;
+            text-align: center;
+        }
+        .grid-item_partc > h2 {
+            margin: 5px;
+        }
+        </style>
+    </head>
+    <body>
+
+    <script>
+    //real production:
+    let params = new URLSearchParams(location.search);
+    var title=params.get('title');
+    console.log("title",title);
+    var chart_DIR = "../../plot/"+title+"/"
+    var icon_DIR = "/static/img/"
+    var json_DIR = "/static/json/"
+
+    //testing env:
+    // var chart_DIR = ""
+    // var icon_DIR = ""
+    // var json_DIR = ""
+
+    var json_file = "data.json"
+    //charts:
+    var temperature_wind_speed_rainfall = "temperature_wind_speed_rainfall.png"
+    var lifts_per_day = "lifts_per_day.png"
+    var lifts_per_week_last_8_weeks = "lifts_per_week_last_8_weeks.png"
+    var average_time_per_lift = "average_time_per_lift.png"
+    var average_timep_per_lift_last_8_weeks = "average_timep_per_lift_last_8_weeks.png"
+    var lift_time_per_day = "lift_time_per_day.png"
+    var lift_time_per_week_last_8_weeks = "lift_time_per_week_last_8_weeks.png"
+    var temperature_wind_speed_rainfall = "temperature_wind_speed_rainfall.png"
+    var mass_lifted_per_hour_last_8_weeks = "mass_lifted_per_hour_last_8_weeks.png"
+    var average_mass_per_lift_last_8_weeks = "average_mass_per_lift_last_8_weeks.png"
+    var mass_lifted_per_week_last_8_weeks = "mass_lifted_per_week_last_8_weeks.png"
+    var lifts_per_month = "lifts_per_month.png"
+    var lift_time_per_month = "lift_time_per_month.png"
+    var mass_lifted_per_month = "mass_lifted_per_month.png"
+    var loading_level_percentage = "loading_level_percentage.png"
+    var percentage_of_time_with_load_on_hook = "percentage_of_time_with_load_on_hook.png"
+    var operating_vs_idle_last_8_weeks = "operating_vs_idle_last_8_weeks.png"
+    var time_per_lift_exceedance = "time_per_lift_exceedance.png"
+    var time_per_lift_histogram = "time_per_lift_histogram.png"
+    var time_since_last_lift_exceedance = "time_since_last_lift_exceedance.png"
+    var time_since_last_lift_histogram = "time_since_last_lift_histogram.png"
+
+    //icon:
+    var logo = "logo_blue.png"
+
+
+    var pageNumber = 1
+    var today = new Date();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var yyyy = today.getFullYear();
+
+    today = mm + '/' + dd + '/' + yyyy;
+
+    var d = new Date();
+    d.setMonth(d.getMonth() - 1);
+
+    var dd_ago = String(d.getDate()).padStart(2, '0');
+    var mm_ago = String(d.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var yyyy_ago = d.getFullYear();
+
+    amonthAgo = mm_ago + '/' + dd_ago + '/' + yyyy_ago;
+
+
+    function changesize_both(obj, h, w){
+        obj.firstChild.style.height = h+"mm";
+        obj.firstChild.style.width = w+"mm";
+    }
+
+    function productivity(count, time, weight){
+        return (((weight/time)*(weight/count))*20.66)/100;
+    }
+
+    function getColor(value) {
+      var hue = ((value) * 120).toString(10);
+      return ["hsl(", hue, ",75%,50%)"].join("");
+    }
+
+
+    window.addEventListener("DOMContentLoaded", function () {
+
+        document.getElementById("view").addEventListener("click", function(){
+            document.getElementsByTagName("title").innerHTML = document.getElementById("deviceName").value + '_' + today
+            document.getElementById("device_number").innerHTML = '<h3 class="w3-right-align">' + document.getElementById("deviceName").value + '</h3>'
+            document.getElementById("site_name").innerHTML = '<h3 class="w3-left-align">' + document.getElementById("siteName").value + '</h3>'
+
+            document.getElementById("coverPage").style.display = "none"
+            document.getElementById("report").style.display = "block"
+            document.getElementById("options").style.display = "block"
+        });
+        document.getElementById("savePDF").addEventListener("click", function(){
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+            var opt = {
+                filename: document.getElementById("deviceName").value + '_' + today + '.pdf'
+              };
+                document.getElementById("options").style.display = "none"
+                window.print()
+                //html2pdf().set(opt).from(document.getElementById('report')).save();
+        });
+
+        var xmlhttp = new XMLHttpRequest();
+
+        xmlhttp.onreadystatechange = function() {
+            if (xmlhttp.readyState == XMLHttpRequest.DONE) { // XMLHttpRequest.DONE == 4
+               if (xmlhttp.status == 200) {
+                    data = xmlhttp.responseText;
+                    data = JSON.parse(data)
+                    document.getElementById("month_year").innerHTML = data.datavalue[0].Start_date.slice(0,7)
+                    document.getElementById("total_days").innerHTML = data.datavalue[0].Total_days
+                    document.getElementById("rDO_sunday_holiday").innerHTML = data.datavalue[0].RDO_sunday_holiday
+                    document.getElementById("weather").innerHTML = data.datavalue[0].Weather
+                    document.getElementById("days_available").innerHTML = data.datavalue[0].Days_available
+                    document.getElementById("day_used").innerHTML = data.datavalue[0].Day_used
+                    var percent = productivity(data.datavalue[0].Total_lift_count, data.datavalue[0].Total_lift_time, data.datavalue[0].Total_lift_weight);
+                    document.getElementById("percent").innerHTML = (percent*10).toString().substr(0,4)+'%';
+                    document.getElementById("percent").style.color = getColor(percent/10)
+
+                    //var percent = 0.11; //for testing
+                    //Part C Script XML:
+                    if (data.partc.length > 0){
+                        var partc_pages = document.getElementById('partc_pages')
+                        partc_pages.style.display = "block"
+                        for (var i = 0; i < data.partc.length; i++){
+                            var partc_page = document.createElement("div")
+                            partc_page.className = "partc page html2pdf__page-break pagebreak"
+                            partc_page.innerHTML += '<h1 class="partc_title blue w3-border-bottom">Longest lift ' + (i+1) + '.</h1>'
+
+                            var title_1 = document.createElement("h2")
+                            title_1.innerHTML = "Date"
+                            title_1.className = "white medium"
+                            var grid_1 = document.createElement("div")
+                            grid_1.className = "grid-item_partc"
+                            grid_1.append(title_1)
+
+                            var title_2 = document.createElement("h2")
+                            title_2.innerHTML = "Time"
+                            title_2.className = "white medium"
+                            var grid_2 = document.createElement("div")
+                            grid_2.className = "grid-item_partc"
+                            grid_2.append(title_2)
+
+                            var title_3 = document.createElement("h2")
+                            title_3.innerHTML = "Load Mass"
+                            title_3.className = "white medium"
+                            var grid_3 = document.createElement("div")
+                            grid_3.className = "grid-item_partc"
+                            grid_3.append(title_3)
+
+                            var title_4 = document.createElement("h2")
+                            title_4.innerHTML = "Event"
+                            title_4.className = "white medium"
+                            var grid_4 = document.createElement("div")
+                            grid_4.className = "grid-item_partc"
+                            grid_4.append(title_4)
+
+                            var title_5 = document.createElement("h2")
+                            title_5.innerHTML = ("0" + new Date(data.partc[i].Date).getDate()).slice(-2) + '-' + ("0" + (new Date(data.partc[i].Date).getMonth() + 1)).slice(-2) + '-' + new Date(data.partc[i].Date).getFullYear();
+
+                            title_5.className = "white medium date_partc"
+                            var grid_5 = document.createElement("div")
+                            grid_5.className = "grid-item_partc"
+                            grid_5.append(title_5)
+
+                            var title_6 = document.createElement("h2")
+                            title_6.innerHTML = data.partc[i].Time + " AWST Time"
+                            title_6.className = "white medium time_partc"
+                            var grid_6 = document.createElement("div")
+                            grid_6.className = "grid-item_partc"
+                            grid_6.append(title_6)
+
+                            var title_7 = document.createElement("h2")
+                            title_7.innerHTML = data.partc[i].Load
+                            title_7.className = "white medium load_mass_partc"
+                            var grid_7 = document.createElement("div")
+                            grid_7.className = "grid-item_partc"
+                            grid_7.append(title_7)
+
+                            var title_8 = document.createElement("h2")
+                            title_8.innerHTML = data.partc[i].Event
+                            title_8.className = "white medium event_partc"
+                            var grid_8 = document.createElement("div")
+                            grid_8.className = "grid-item_partc"
+                            grid_8.append(title_8)
+
+                            var grid_container_partc = document.createElement("div")
+                            grid_container_partc.className = "grid-container_partc w3-border-bottom"
+                            grid_container_partc.append(grid_1)
+                            grid_container_partc.append(grid_2)
+                            grid_container_partc.append(grid_3)
+                            grid_container_partc.append(grid_4)
+                            grid_container_partc.append(grid_5)
+                            grid_container_partc.append(grid_6)
+                            grid_container_partc.append(grid_7)
+                            grid_container_partc.append(grid_8)
+
+                            var title_days_partc = document.createElement("div")
+                            title_days_partc.className = "title_days_partc"
+                            title_days_partc.append(grid_container_partc)
+                            var partc_banner = document.createElement("div")
+                            partc_banner.className = "partc_banner"
+                            partc_banner.append(title_days_partc)
+                            partc_page.append(partc_banner)
+
+                            var snapshot = document.createElement("div")
+                            snapshot.className = "snapshot"
+                            snapshot.innerHTML += '<h2 class="blue">Snapshot:</h2>'
+                            var snapshot_img = document.createElement("div")
+                            snapshot_img.className = "snapshot_img"
+                            snapshot_img.innerHTML = '<img src="' + data.partc[i].Thumbnail.slice(data.partc[i].Thumbnail.search("href=")+5, data.partc[i].Thumbnail.search("target")) + '" style="height:140mm">'
+                            snapshot.append(snapshot_img)
+                            partc_page.append(snapshot)
+
+
+                            var comments = document.createElement("div")
+                            comments.className = "comments"
+                            comments.innerHTML += '<h2 class="blue">Comments:</h2>'
+                            var comments_text = document.createElement("div")
+                            comments_text.className = "comments_text"
+                            ////comments_text.innerHTML = "Auto generated comment : " + data["partc"][i]["Load Status"]
+                            comments_text.innerHTML += '<textarea cols="120" rows="5"></textarea>'
+
+                            comments.append(comments_text)
+                            partc_page.append(comments)
+
+                            partc_page.innerHTML += '<div class="footer"></div>'
+                            partc_pages.append(partc_page)
+                            var breaker = document.createElement("div")
+                            partc_pages.append(breaker)
+                        }
+                    }
+               }
+               else if (xmlhttp.status == 400) {
+                  alert('There was an error 400');
+               }
+               else {
+                   alert('something else other than 200 was returned');
+               }
+            }
+        };
+
+        xmlhttp.open("GET", json_DIR + json_file, true);
+        xmlhttp.send();
+        var logo_part_a_obj = document.getElementById("logo_part_a")
+        logo_part_a_obj.innerHTML = '<img src="' + icon_DIR + logo + '" class="w3-image" style="margin-top:10px;">'
+
+        var temperature_wind_speed_rainfall_obj = document.getElementById("temperature_wind_speed_rainfall")
+        temperature_wind_speed_rainfall_obj.innerHTML = '<img src="' + chart_DIR + temperature_wind_speed_rainfall + '" class="w3-image reduced_img_height">'
+
+        var lifts_per_day_obj =  document.getElementById("lifts_per_day")
+        lifts_per_day_obj.innerHTML = '<img src="' + chart_DIR + lifts_per_day + '" class="w3-image reduced_img_height">'
+
+        var lifts_per_week_last_8_weeks_obj =  document.getElementById("lifts_per_week_last_8_weeks")
+        lifts_per_week_last_8_weeks_obj.innerHTML = '<img src="' + chart_DIR + lifts_per_week_last_8_weeks + '" class="w3-image reduced_img_height">'
+
+        var average_time_per_lift_obj = document.getElementById("average_time_per_lift")
+        average_time_per_lift_obj.innerHTML = '<img src="' + chart_DIR + average_time_per_lift + '" class="w3-image reduced_img_height">'
+
+        var average_timep_per_lift_last_8_weeks_obj = document.getElementById("average_timep_per_lift_last_8_weeks")
+        average_timep_per_lift_last_8_weeks_obj.innerHTML = '<img src="' + chart_DIR + average_timep_per_lift_last_8_weeks + '" class="w3-image reduced_img_height">'
+
+        var lift_time_per_day_obj =  document.getElementById("lift_time_per_day")
+        lift_time_per_day_obj.innerHTML = '<img src="' + chart_DIR + lift_time_per_day + '" class="w3-image reduced_img_height">'
+
+        var lift_time_per_week_last_8_weeks_obj = document.getElementById("lift_time_per_week_last_8_weeks")
+        lift_time_per_week_last_8_weeks_obj.innerHTML = '<img src="' + chart_DIR + lift_time_per_week_last_8_weeks + '" class="w3-image reduced_img_height">'
+
+        var mass_lifted_per_hour_last_8_weeks_obj = document.getElementById("mass_lifted_per_hour_last_8_weeks")
+        mass_lifted_per_hour_last_8_weeks_obj.innerHTML = '<img src="' + chart_DIR + mass_lifted_per_hour_last_8_weeks + '" class="w3-image reduced_img_height">'
+
+        var average_mass_per_lift_last_8_weeks_obj = document.getElementById("average_mass_per_lift_last_8_weeks")
+        average_mass_per_lift_last_8_weeks_obj.innerHTML = '<img src="' + chart_DIR + average_mass_per_lift_last_8_weeks + '" class="w3-image reduced_img_height">'
+
+        var mass_lifted_per_week_last_8_weeks_obj = document.getElementById("mass_lifted_per_week_last_8_weeks")
+        mass_lifted_per_week_last_8_weeks_obj.innerHTML = '<img src="' + chart_DIR + mass_lifted_per_week_last_8_weeks + '" class="w3-image reduced_img_height">'
+
+        var lifts_per_month_obj = document.getElementById("lifts_per_month")
+        lifts_per_month_obj.innerHTML = '<img src="' + chart_DIR + lifts_per_month + '" class="w3-image reduced_img_height">'
+
+        var lift_time_per_month_obj = document.getElementById("lift_time_per_month")
+        lift_time_per_month_obj.innerHTML = '<img src="' + chart_DIR + lift_time_per_month + '" class="w3-image reduced_img_height">'
+
+        var mass_lifted_per_month_obj = document.getElementById("mass_lifted_per_month")
+        mass_lifted_per_month_obj.innerHTML = '<img src="' + chart_DIR + mass_lifted_per_month + '" class="w3-image reduced_img_height">'
+
+        var loading_level_percentage_obj = document.getElementById("loading_level_percentage")
+        loading_level_percentage_obj.innerHTML = '<img src="' + chart_DIR + loading_level_percentage + '" class="w3-image reduced_img_height">'
+
+        var percentage_of_time_with_load_on_hook_obj = document.getElementById("percentage_of_time_with_load_on_hook")
+        percentage_of_time_with_load_on_hook_obj.innerHTML = '<img src="' + chart_DIR + percentage_of_time_with_load_on_hook + '" class="w3-image reduced_img_height">'
+
+        var operating_vs_idle_last_8_weeks_obj = document.getElementById("operating_vs_idle_last_8_weeks")
+        operating_vs_idle_last_8_weeks_obj.innerHTML = '<img src="' + chart_DIR + operating_vs_idle_last_8_weeks + '" class="w3-image reduced_img_height">'
+
+        var time_per_lift_exceedance_obj = document.getElementById("time_per_lift_exceedance")
+        time_per_lift_exceedance_obj.innerHTML = '<img src="' + chart_DIR + time_per_lift_exceedance + '" class="w3-image reduced_img_height">'
+
+        var time_per_lift_histogram_obj = document.getElementById("time_per_lift_histogram")
+        time_per_lift_histogram_obj.innerHTML = '<img src="' + chart_DIR + time_per_lift_histogram + '" class="w3-image reduced_img_height">'
+
+        var time_since_last_lift_exceedance_obj = document.getElementById("time_since_last_lift_exceedance")
+        time_since_last_lift_exceedance_obj.innerHTML = '<img src="' + chart_DIR + time_since_last_lift_exceedance + '" class="w3-image reduced_img_height">'
+
+        var time_since_last_lift_histogram_obj = document.getElementById("time_since_last_lift_histogram")
+        time_since_last_lift_histogram_obj.innerHTML = '<img src="' + chart_DIR + time_since_last_lift_histogram + '" class="w3-image reduced_img_height">'
+
+
+
+        //header
+        // var header_obj = document.getElementsByClassName("header")
+        // for (var i = 0; i < header_obj.length; i++){
+        //     header_obj[i].firstElementChild.innerHTML = '<img src="' + icon_DIR + header_1 + '">'
+        //     changesize(header_obj[i].firstElementChild, 15)
+        // }
+        //
+        // //footer
+        //
+        // var footer_obj = document.getElementsByClassName("footer")
+        // for (var i = 0; i < footer_obj.length; i++){
+        //     footer_obj[i].firstElementChild.innerHTML = '<img src="' + icon_DIR + footer_1 + '"><div class="footer_line_1"></div><div class="footer_line_2"></div>'
+        //     changesize(footer_obj[i].firstElementChild, 15)
+        // }
+        // var footer_line_1 = document.getElementsByClassName("footer_line_1")
+        // var footer_line_2 = document.getElementsByClassName("footer_line_2")
+        // for (var i = 0; i < footer_line_1.length; i++){
+        //     footer_line_1[i].innerHTML = "Project Number xxxxxx | Issue Date " + today + "  |  Page " + (i+1)
+        //     footer_line_2[i].innerHTML = "www.roborigger.com.au | T: +61 8 9488 4500 | ACN 631 681 564"
+        // }
+        //
+        // var weather_obj = document.getElementsByClassName("weather")
+        // var weather_label_obj = document.getElementsByClassName("weather_label")
+        // for (var i = 0; i < weather_obj.length; i++){
+        //     weather_obj[i].innerHTML = '<img src="' + icon_DIR + weather + '">'
+        //     changesize_both(weather_obj[i], 20,126)
+        //     weather_label_obj[i].innerHTML = '<img src="' + icon_DIR + arrow + '"><div class="whilte">Weather<div>'
+        //     changesize_both(weather_label_obj[i], 15,58)
+        //     weather_label_obj[i].firstChild.style.position = "absolute"
+        //     weather_label_obj[i].firstChild.style.zIndex = "-1"
+        //     weather_label_obj[i].children[1].style.color = "white"
+        //     weather_label_obj[i].children[1].style.marginLeft = "23mm"
+        //     weather_label_obj[i].children[1].style.marginTop = "5mm"
+        //
+        // }
+        // var separater_obj = document.getElementsByClassName("separater")
+        // for (var i = 0; i < separater_obj.length; i++){
+        //     separater_obj[i].innerHTML = '<img src="' + icon_DIR + separater + '">'
+        // }
+        //
+        //
+
+
+
+
+
+    }, false);
+
+
+
+
+    //partC charts:
+
+    </script>
+
+    <div id="coverPage">
+        <div class="input">
+            <label for="deviceName">Device name: </label>
+            <input type="text" id="deviceName" value="AR10-010"><br><br>
+            <label for="siteName">Site name: </label>
+            <input type="text" id="siteName" value="SYD site"><br><br>
+            <label for="address">Address: </label>
+            <input type="text" id="address" value="12 John St Sydney, NSW 2000"><br><br>
+            <label for="contact">Contact: </label>
+            <input type="text" id="contact" value="(02) 2859 1834"><br><br>
+            <button id="view" class="button">View PDF</button>
+        </div>
+    </div>
+
+    <div id="options" style="display: none">
+            <button id="savePDF" class="button">Save PDF</button>
+    </div>
+
+    <div id="report" style="display: none">
+        <div class="pagebreak"> </div>
+        <div class="page1">
+            <div class="row">
+                <div class="col-xs-3">
+                    <div id="device_number">
+                        <h3 class="w3-right-align">AR10-XX</h3>
+                    </div>
+                    <h3 class="w3-right-align">PERIOD</h3>
+                    <h3 class="w3-right-align">SITE</h3>
+
+                </div>
+                <div class="col-xs-5">
+                    <h3 class="w3-left-align">Productivity Report</h3>
+                    <div id="month">
+                        <h3 class="w3-left-align" id="month_year">MONTH, YEAR</h3>
+                    </div>
+                    <div id="site_name">
+                        <h3 class="w3-left-align">SITE NAME: xxx site</h3>
+                    </div>
+                </div>
+                <div class="col-xs-4">
+                    <div id="logo_part_a"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12 w3-border-top" style="margin-top:5px;margin-bottom:5px;">
+                    <h3>Roborigger Utilisation</h3>
+                    <table class="w3-table">
+                        <tr>
+                            <th>Total Days</th>
+                            <th>RDO,Sunday,Holiday</th>
+                            <th>Weather</th>
+                            <th>Days Available</th>
+                            <th>Days Used</th>
+                            <th>% Utilitisation</th>
+                        </tr>
+                        <tr>
+                            <td id="total_days">30</td>
+                            <td id="rDO_sunday_holiday">4</td>
+                            <td id="weather">2</td>
+                            <td id="days_available">24</td>
+                            <td id="day_used">18</td>
+                            <td id="percent">75</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="col-xs-7">
+                        <h4>Lifts Per Day</h4>
+                        <div id="lifts_per_day"></div>
+                    </div>
+                    <div class="col-xs-5">
+                        <div style="display:flex;">
+                            <h4>Lifts Per Week</h4>
+                            <h6 style="margin-left:10px;">(Last 8 Weeks)</h6>
+                        </div>
+                        <div id="lifts_per_week_last_8_weeks"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="col-xs-7">
+                        <h4>Average Time/Lift</h4>
+                        <div id="average_time_per_lift"></div>
+                    </div>
+                    <div class="col-xs-5">
+                        <div style="display:flex;">
+                            <h4>Ave. Time/Lift</h4>
+                            <h6 style="margin-left:10px;">(Last 8 Weeks)</h6>
+                        </div>
+                        <div id="average_timep_per_lift_last_8_weeks"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="col-xs-7">
+                        <h4>Lift Time Per Day</h4>
+                        <div id="lift_time_per_day"></div>
+                    </div>
+                    <div class="col-xs-5">
+                        <div style="display:flex;">
+                            <h4>Lift Time Per Week</h4>
+                            <h6 style="margin-left:10px;">(Last 8 Weeks)</h6>
+                        </div>
+                        <div id="lift_time_per_week_last_8_weeks"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="col-xs-7">
+                        <h4>Weather</h4>
+                        <div id="temperature_wind_speed_rainfall"></div>
+                    </div>
+                    <div class="col-xs-5">
+                        <div style="display:flex;">
+                            <h4>Mass Lifted Per Hour</h4>
+                            <h6 style="margin-left:10px;">(Last 8 Weeks)</h6>
+                        </div>
+                        <div id="mass_lifted_per_hour_last_8_weeks"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="pagebreak"> </div>
+        <div class=page2>
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="col-xs-6">
+                        <div style="display:flex;">
+                            <h4>Average Mass Per Lift</h4>
+                            <h6 style="margin-left:10px;">(Last 8 Weeks)</h6>
+                        </div>
+                        <div id="average_mass_per_lift_last_8_weeks"></div>
+                    </div>
+                    <div class="col-xs-6">
+                        <div style="display:flex;">
+                            <h4>Mass Lifted Per Week</h4>
+                            <h6 style="margin-left:10px;">(Last 8 Weeks)</h6>
+                        </div>
+                        <div id="mass_lifted_per_week_last_8_weeks"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-4">
+                    <h4>Lifts Per Month</h4>
+                    <div id="lifts_per_month"></div>
+                </div>
+                <div class="col-xs-4">
+                    <h4>Lift Time Per Month</h4>
+                    <div id="lift_time_per_month"></div>
+                </div>
+                <div class="col-xs-4">
+                    <h4>Mass Per Month</h4>
+                    <div id="mass_lifted_per_month"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-12">
+                    <h4>Loading Level Percentage</h4>
+                    <div id="loading_level_percentage"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="col-xs-7">
+                        <h4>Percentage of Time with Load on Hook</h4>
+                        <div id="percentage_of_time_with_load_on_hook"></div>
+                    </div>
+                    <div class="col-xs-5">
+                        <div style="display:flex;">
+                            <h4>Operating Vs. Idle</h4>
+                            <h6 style="margin-left:10px;">(Last 8 Weeks)</h6>
+                        </div>
+                        <div id="operating_vs_idle_last_8_weeks"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="pagebreak"> </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="col-xs-7">
+                        <h4>Time Per Lift Exceedance</h4>
+                        <div id="time_per_lift_exceedance"></div>
+                    </div>
+                    <div class="col-xs-5">
+                        <h4>Time Per Lift Histogram</h4>
+                        <div id="time_per_lift_histogram"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="col-xs-7">
+                        <h4>Time Since Last Lift Exceedance</h4>
+                        <div id="time_since_last_lift_exceedance"></div>
+                    </div>
+                    <div class="col-xs-5">
+                        <h4>Time Since Last Lift Histogram</h4>
+                        <div id="time_since_last_lift_histogram"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="html2pdf__page-break"></div>
+
+        <div id="partc_pages" style="display: none">
+        </div>
+    </div>
+    </body>
+</html>
